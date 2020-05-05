@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "esnext",
+        "experimentalDecorators": true,
+        "declaration": false,
+        "allowJs": true,
+        "strict": true,
+        "outDir": "./build"
+    },
+}
