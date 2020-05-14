@@ -1,4 +1,3 @@
-import { mat4 } from "gl-matrix";
 import { Matrix } from 'ml-matrix';
 
 
