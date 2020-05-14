@@ -104,22 +104,22 @@ export function createOrthProjection(
 export function createPerspectiveProjection(
     fov: number,
     aspectRatio: number,
-    near: number,
-    far: number,
+    near: number, // 正数 near < far
+    far: number, // 正数 near < far
 ) {
     const perspective = new Matrix([
         [near, 0, 0, 0,],
         [0, near, 0, 0,],
-        [0, 0, near + far, -near * far,],
-        [0, 0, 1, 0,],
+        [0, 0, -near - far, -near * far,],
+        [0, 0, -1, 0,],
     ]);
 
-    const t = Math.tan(fov / 2) * near;
+    const t = Math.tan(fov / 2) * Math.abs(near);
     const r = t * aspectRatio;
     const orth = createOrthProjection(
         r, -r,
         t, -t,
-        near, far
+        far, near
     );
 
     // var f = 1.0 / Math.tan(fov / 2);
@@ -131,6 +131,6 @@ export function createPerspectiveProjection(
     //     [0,               0,    (near + far) * rangeInv,  -1,],
     //     [0,               0,  near * far * rangeInv * 2,   0]
     // ]);
-    // 为什么这里要转置才行
+    // 为什么这里乘出来需要转置？
     return orth.mmul(perspective).transpose();
 }
