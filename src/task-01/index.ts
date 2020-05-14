@@ -1,10 +1,10 @@
 import { initShaders, createFloatArray32, flatMatrix, degree2radian } from '../utils';
-import { createOrthProjection, createTranslateM4, createPoint3d, createPerspectiveProjection, createRotateZM4 } from '../utils/m';
+import { createOrthProjection, createTranslateM4, createPoint3d, createPerspectiveProjection, createRotateZM4, createVector3d } from '../utils/m';
 import Matrix from 'ml-matrix';
 
-const p0 = createPoint3d(0, 0, -10);
-const p1 = createPoint3d(0, 200, -10);
-const p2 = createPoint3d(200, 0, -10);
+const p0 = createPoint3d(2, 0, -2);
+const p1 = createPoint3d(0, 2, -2);
+const p2 = createPoint3d(-2, 0, -2);
 const p3 = createPoint3d(0, 0, -20);
 const p4 = createPoint3d(-200, 0, -20);
 const p5 = createPoint3d(0, -100, -20);
@@ -16,10 +16,10 @@ const orthProjection = createOrthProjection(
     -5, -25
 );
 
-let near = -10;
-let far = -20;
+let near = 2;
+let far = 50;
 let perspectiveProjection = createPerspectiveProjection(
-    degree2radian(60),
+    degree2radian(45),
     1 / 1,
     near, far
 );
@@ -39,8 +39,8 @@ window.addEventListener('keydown', (e: KeyboardEvent) => {
         // case 's': T.y--; break;
         // case 'a': far+=0.01; break;
         // case 'd': far-=0.01; break;
-        // case 'w': near+=0.01; break;
-        // case 's': near-=0.01; break;
+        case 'w': near+=0.01; break;
+        case 's': near-=0.01; break;
         default: return;
     }
 
