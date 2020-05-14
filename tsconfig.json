@@ -1,11 +1,17 @@
 {
     "compilerOptions": {
-        "target": "es6",
+        "target": "es5",
         "module": "esnext",
+        "moduleResolution": "node",
+        "downlevelIteration": true,
         "experimentalDecorators": true,
         "declaration": false,
-        "allowJs": true,
+        "allowJs": false,
         "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "rootDir": "./src",
         "outDir": "./build"
     },
+    "include": ["./src"]
 }
