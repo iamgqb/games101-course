@@ -1,4 +1,4 @@
-import Matrix from "ml-matrix";
+import { vec2, vec3 } from "gl-matrix";
 
 export function initShaders(
     gl: WebGLRenderingContext,
@@ -30,30 +30,22 @@ export function initShaders(
     return program;
 }
 
-export function createFloatArray32(val: Matrix[]) {
+export function flatPoints(val: vec2[] | vec3[]) {
     if (val.length === 0) {
         return new Float32Array();
     }
 
-    const dimension = val[0].rows;
+    const dimension = val[0].length;
     const res: number[] = [];
 
     for (const v of val) {
-        if (v.rows !== dimension) {
+        if (v.length !== dimension) {
             throw new Error('different dimension');
         }
-        res.push(...v.getColumn(0).slice(0, -1));
+        res.push(...v);
     }
 
     return new Float32Array(res);
-}
-
-export function flatMatrix(matrix: Matrix) {
-    const result: number[] = [];
-    for(let i = 0; i < matrix.columns; i++) {
-        result.push(...matrix.getColumn(i));
-    }
-    return result;
 }
 
 export function degree2radian(degree: number) {

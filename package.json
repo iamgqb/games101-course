@@ -10,7 +10,7 @@
   "author": "iamgqb",
   "license": "ISC",
   "dependencies": {
-    "ml-matrix": "^6.5.0"
+    "gl-matrix": "^3.3.0"
   },
   "devDependencies": {
     "del": "^5.1.0",

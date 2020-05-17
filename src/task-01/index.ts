@@ -1,13 +1,11 @@
-import { initShaders, createFloatArray32, flatMatrix, degree2radian } from '../utils';
-import { createOrthProjection, createTranslateM4, createPoint3d, createPerspectiveProjection, createRotateZM4, createVector3d } from '../utils/m';
-import Matrix from 'ml-matrix';
+import { initShaders, flatPoints, degree2radian } from '../utils';
+import { createOrthProjection, createTranslateM4, createPerspectiveProjection, createRotateZM4 } from '../utils/m';
+import { mat4, vec3 } from 'gl-matrix';
 
-const p0 = createPoint3d(2, 0, -2);
-const p1 = createPoint3d(0, 2, -2);
-const p2 = createPoint3d(-2, 0, -2);
-const p3 = createPoint3d(0, 0, -20);
-const p4 = createPoint3d(-200, 0, -20);
-const p5 = createPoint3d(0, -100, -20);
+const p0 = vec3.fromValues(2, 0, -2);
+const p1 = vec3.fromValues(0, 2, -2);
+const p2 = vec3.fromValues(-2, 0, -2);
+
 const points = [p0, p1, p2]
 
 const orthProjection = createOrthProjection(
@@ -29,7 +27,7 @@ const T = {
     y: 0,
     zRotate: 0,
 }
-let modelMatrix = Matrix.identity(4);
+let modelMatrix = mat4.identity(mat4.create());
 
 window.addEventListener('keydown', (e: KeyboardEvent) => {
     switch (e.key) {
@@ -45,15 +43,14 @@ window.addEventListener('keydown', (e: KeyboardEvent) => {
     }
 
     perspectiveProjection = createPerspectiveProjection(
-        degree2radian(60),
+        degree2radian(45),
         1 / 1,
         near, far
     );
-    
 
     const rotateM = createRotateZM4(degree2radian(T.zRotate));
     const translateM = createTranslateM4(T.x, T.y, 0);
-    modelMatrix = translateM.mmul(rotateM);
+    modelMatrix = mat4.multiply(modelMatrix, translateM, rotateM)
 })
 
 const vertexShader = `
@@ -89,7 +86,7 @@ const projectionUniformLocation = gl.getUniformLocation(program, 'u_project');
 const modelUniformLocation = gl.getUniformLocation(program, 'u_model');
 
 // create point buffer And bind
-const positionValue = createFloatArray32(points);
+const positionValue = flatPoints(points);
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, positionValue, gl.STATIC_DRAW);
@@ -106,9 +103,9 @@ function draw(gl: WebGLRenderingContext) {
         positionAttribLocation, 3, gl.FLOAT, false, 0, 0
     );
 
-    gl.uniformMatrix4fv(projectionUniformLocation, false, new Float32Array(flatMatrix(perspectiveProjection)));
+    gl.uniformMatrix4fv(projectionUniformLocation, false, perspectiveProjection);
 
-    gl.uniformMatrix4fv(modelUniformLocation, false, new Float32Array(flatMatrix(modelMatrix)));
+    gl.uniformMatrix4fv(modelUniformLocation, false, modelMatrix);
 
     gl.drawArrays(gl.LINE_LOOP, 0, points.length);
 
