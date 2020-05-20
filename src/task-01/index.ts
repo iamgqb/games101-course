@@ -9,9 +9,9 @@ const p2 = vec3.fromValues(-2, 0, -2);
 const points = [p0, p1, p2]
 
 const orthProjection = createOrthProjection(
-    300, -300,
-    300, -300,
-    -5, -25
+    10, -10,
+    10, -10,
+    5, -5
 );
 
 let near = 2;
@@ -103,7 +103,7 @@ function draw(gl: WebGLRenderingContext) {
         positionAttribLocation, 3, gl.FLOAT, false, 0, 0
     );
 
-    gl.uniformMatrix4fv(projectionUniformLocation, false, perspectiveProjection);
+    gl.uniformMatrix4fv(projectionUniformLocation, false, orthProjection);
 
     gl.uniformMatrix4fv(modelUniformLocation, false, modelMatrix);
 
