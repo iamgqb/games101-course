@@ -17,14 +17,19 @@ const p6 = vec3.fromValues(2, 2, -4);
 const p7 = vec3.fromValues(0, 2, -4);
 
 const colorA = [123.0 / 255.0, 178.0 / 255.0, 79.0 / 255.0, 1.0];
+// const colorA = [1.0, 1.0, 1.0, 1.0];
 
 const orthProjection = createOrthProjection(
     3, -3,
     3, -3,
     10, -10
 )
+// const orthProjection = mat4.perspective(mat4.create(),
+// glMatrix.toRadian(45), 1, 0.1, 100);
+const view = mat4.lookAt(mat4.create(), vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0), vec3.fromValues(0, 1, 0))
+mat4.multiply(orthProjection, orthProjection, view)
 
-const tetrahedron = [
+const cube = [
     p0, p1, p5,
     p0, p5, p4,
     p1, p2, p6,
@@ -44,20 +49,16 @@ const vertexShader = `
     attribute vec3 a_normal; // 各点 normal
     uniform mat4 u_project;
     uniform mat4 u_model;
-    uniform vec3 u_light; // 光源位置
-    varying float percent; // 计算得的明暗
+
+    varying vec4 v_position;
+    varying vec4 v_normal;
 
     void main() {
-        vec4 light = vec4(u_light, 0.0);
         vec4 position = u_project * u_model * a_position;
 
-        vec4 normal = normalize(u_project * u_model * vec4(a_normal, 0.0));
-        vec4 ray = normalize(light - position);
+        v_normal = normalize(u_project * u_model * vec4(a_normal, 0.0));
 
-        float r = length(light - position);
-
-        float I = 300.0; // 光强
-        percent = I / r / r * max(dot(ray, normal), 0.0);
+        v_position = position;
         gl_Position = position;
     }
 `;
@@ -65,11 +66,31 @@ const vertexShader = `
 const fragmentShader = `
     precision mediump float;
     uniform vec4 u_color;
-    varying float percent;
+    uniform vec3 u_lightPos; // 光源位置
+    uniform vec3 u_eyePos; // 视角位置
+
+    varying vec4 v_position;
+    varying vec4 v_normal;
+
+    vec4 lightPos = vec4(u_lightPos, 1.0);
+    vec4 eyePos = vec4(u_eyePos, 1.0);
+
+    float ambient = 0.4; // 环境光
+    float I = 50.0; // 光强
 
     void main() {
-        gl_FragColor = u_color;
-        gl_FragColor.rgb *= percent;
+        vec4 lightDir = normalize(lightPos - v_position);
+
+        float r = length(lightPos - v_position);
+        float diffuse = I / r / r * max(dot(lightDir, v_normal), 0.0);
+
+        vec4 eyeDir = normalize(eyePos - v_position);
+        vec4 h = normalize((eyeDir + lightDir) / 2.0);
+        float specular = pow(max(dot(h, v_normal), 0.0), 200.0);
+
+        vec4 color = specular * vec4(1.0, 1.0, 1.0, 1.0) + (ambient + diffuse) * u_color;
+
+        gl_FragColor = vec4(color.rgb, 1.0);
     }
 `;
 
@@ -87,15 +108,16 @@ const normalAttribLocation = gl.getAttribLocation(program, 'a_normal');
 const colorUniformLocation = gl.getUniformLocation(program, 'u_color');
 const modelUniformLocation = gl.getUniformLocation(program, 'u_model');
 const projectUniformLocation = gl.getUniformLocation(program, 'u_project');
-const lightUniformLocation = gl.getUniformLocation(program, 'u_light');
+const lightUniformLocation = gl.getUniformLocation(program, 'u_lightPos');
+const eyeUniformLocation = gl.getUniformLocation(program, 'u_eyePos');
 
 // create point buffer And bind
-const positionValue = flatPoints(tetrahedron);
+const positionValue = flatPoints(cube);
 const normalValue = [];
-for(let i = 0; i < tetrahedron.length; i+=3) {
-    const p0 = tetrahedron[i];
-    const p1 = tetrahedron[i + 1];
-    const p2 = tetrahedron[i + 2];
+for(let i = 0; i < cube.length; i+=3) {
+    const p0 = cube[i];
+    const p1 = cube[i + 1];
+    const p2 = cube[i + 2];
     const vA = vec3.sub(vec3.create(), p1, p0);
     const vB = vec3.sub(vec3.create(), p2, p1);
     const n = vec3.cross(vec3.create(), vA, vB);
@@ -121,25 +143,26 @@ gl.vertexAttribPointer(
 gl.useProgram(program);
 
 gl.uniform4fv(colorUniformLocation, new Float32Array(colorA));
-gl.uniform3f(lightUniformLocation, 0.0, 0.0, 14.0); // 光源位置
+gl.uniform3f(lightUniformLocation, 20.0, 0.0, 0.0); // 光源位置
+gl.uniform3f(eyeUniformLocation, 0.0, 0.0, 5.0); // eye
 
 gl.enable(gl.CULL_FACE)
 let angleX = 0;
-let angleY = 0;
+let angleY = 45;
 let angleZ = 0;
 function draw(gl: WebGLRenderingContext) {
     // gl.clearColor(0, 0, 0, 0);
     // gl.clear(gl.COLOR_BUFFER_BIT);
 
-    angleX += 0.1;
-    angleY += 0.2;
-    angleZ += 0.3;
+    // angleX -= 0.1;
+    angleY -= 0.1;
+    // angleZ -= 0.1;
 
     const transform = mat4.identity(mat4.create());
     const translate = createTranslateM4(-1, -1, 3);
     const translateI = mat4.invert(mat4.create(), translate);
 
-    mat4.multiply(transform, transform, translateI);
+    // mat4.multiply(transform, transform, translateI);
     mat4.multiply(transform, transform, createRotateZM4(glMatrix.toRadian(angleZ)))
     mat4.multiply(transform, transform, createRotateYM4(glMatrix.toRadian(angleY)))
     mat4.multiply(transform, transform, createRotateXM4(glMatrix.toRadian(angleX)))
@@ -148,7 +171,7 @@ function draw(gl: WebGLRenderingContext) {
     gl.uniformMatrix4fv(projectUniformLocation, false, orthProjection);
     gl.uniformMatrix4fv(modelUniformLocation, false, transform);
 
-    gl.drawArrays(gl.TRIANGLES, 0, tetrahedron.length);
+    gl.drawArrays(gl.TRIANGLES, 0, cube.length);
 
     requestAnimationFrame(() => {
         draw(gl);
