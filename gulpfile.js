@@ -18,7 +18,6 @@ function copy() {
 async function buildTs() {
   return gulp.src('src/**/*.ts')
     .pipe(rollupEach({
-      // format: 'es',
       plugins: [
         resolve(),
         commonjs(),
