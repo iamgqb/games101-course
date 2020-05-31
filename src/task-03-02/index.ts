@@ -51,7 +51,8 @@ const vertexShader = `
     void main() {
         vec4 position = u_project * u_view * u_model * a_position;
 
-        v_normal = normalize(u_project * u_view * u_model * vec4(a_normal, 0.0)).xyz;
+        // normal 插值时不要projection
+        v_normal = normalize(u_view * u_model * vec4(a_normal, 0.0)).xyz;
 
         v_position = position.xyz;
         v_texture = a_texture;
@@ -91,7 +92,6 @@ const fragmentShader = `
 
         if (dot(lightDir, lightToSurface) > 0.0) { // 聚光灯
             light = diffuse + ambient;
-            // 这模型太小了高光不明显
             specular = I / r / r * pow(max(dot(h, v_normal), 0.0), 100.0);
         }
 
@@ -149,7 +149,7 @@ async function main(gl: WebGLRenderingContext) {
         });
         face.texture.forEach(idx => {
             const texture = textures[idx - 1];
-            mergeTexture.push(texture[0], texture[1]);
+            mergeTexture.push(texture[0], 1 - texture[1]);
         })
     });
 
@@ -180,11 +180,11 @@ async function main(gl: WebGLRenderingContext) {
     const sampler = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, sampler);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    // gl.generateMipmap(gl.TEXTURE_2D);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.generateMipmap(gl.TEXTURE_2D);
 
 
     gl.useProgram(program);
@@ -201,6 +201,11 @@ async function main(gl: WebGLRenderingContext) {
     gl.enable(gl.DEPTH_TEST);
 
 
+    const identity = mat4.identity(mat4.create());
+    const translate = createTranslateM4(-1, 0, 0);
+    const translateT = mat4.invert(mat4.create(), translate);
+    const scale = createScaleM4(-1, 1, 1);
+    let rotateY = 0;
     // mat4.multiply(transform, transform, createScaleM4(2, 2, 2));
     // mat4.multiply(transform, transform, createRotateXM4(Math.asin(1/Math.sqrt(3))));
     // mat4.multiply(transform, transform, createRotateZM4(glMatrix.toRadian(45)));
@@ -208,7 +213,8 @@ async function main(gl: WebGLRenderingContext) {
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        mat4.multiply(transform, transform, createRotateYM4(glMatrix.toRadian(1)));
+        // mat4.multiply(transform, identity, scale);
+        mat4.multiply(transform, identity, createRotateYM4(glMatrix.toRadian(rotateY++)))
 
         gl.uniformMatrix4fv(modelUniformLocation, false, transform);
 
