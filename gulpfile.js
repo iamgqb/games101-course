@@ -33,6 +33,7 @@ async function buildTs() {
 
 exports.watch = () => {
   this.build();
-  gulp.watch('src/**/*', this.build);
-}
+  gulp.watch('src/**/*.ts', this.buildTs);
+};
+exports.buildTs = gulp.series(buildTs);
 exports.build = gulp.series(delBuild, copy, buildTs);

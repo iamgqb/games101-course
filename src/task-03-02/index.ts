@@ -10,7 +10,6 @@ if (!canvas) {
     throw new Error('no canvas');
 }
 
-
 // const colorA = [123.0 / 255.0, 178.0 / 255.0, 79.0 / 255.0, 1.0];
 const colorA = [1.0, 1.0, 1.0, 1.0];
 
