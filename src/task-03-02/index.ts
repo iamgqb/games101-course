@@ -3,6 +3,7 @@ import { createTranslateM4, createRotateZM4, createRotateXM4, createRotateYM4, c
 import { mat4, vec3, glMatrix } from 'gl-matrix';
 import objLoader from '../utils/objLoader';
 import imgLoader from '../utils/imgLoader';
+import { transpose, inverse } from '../utils/glsl';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#stage');
 if (!canvas) {
@@ -37,7 +38,10 @@ const transform = mat4.identity(mat4.create());
 
 
 const vertexShader = `
-    attribute vec4   a_position;
+    ${transpose}
+    ${inverse}
+
+    attribute vec4 a_position;
     attribute vec3 a_normal; // 各点 normal
     attribute vec2 a_texture;
     uniform mat4 u_project;
@@ -52,7 +56,8 @@ const vertexShader = `
         vec4 position = u_project * u_view * u_model * a_position;
 
         // normal 插值时不要projection
-        v_normal = normalize(u_view * u_model * vec4(a_normal, 0.0)).xyz;
+        mat4 u_world = inverse(u_view * u_model);
+        v_normal = normalize(u_world * vec4(a_normal, 0.0)).xyz;
 
         v_position = position.xyz;
         v_texture = a_texture;
