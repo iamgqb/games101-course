@@ -91,3 +91,45 @@ float inverse(float m) {
         a20 * b03 - a21 * b01 + a22 * b00) / det;
   }
 `
+
+export const intersectBox = `
+${inverse}
+
+// http://iquilezles.org/www/articles/boxfunctions/boxfunctions.htm
+vec4 intersectBox(vec3 ro, vec3 rd, mat4 txx, vec3 rad) {
+    // convert from ray to box space
+    vec3 rdd = (txx*vec4(rd,0.0)).xyz;
+    vec3 roo = (txx*vec4(ro,1.0)).xyz;
+
+    // ray-box intersection in box space
+    vec3 m = 1.0/rdd;
+    vec3 n = m*roo;
+    vec3 k = abs(m)*rad;
+
+    vec3 t1 = -n - k;
+    vec3 t2 = -n + k;
+
+    float tN = max( max( t1.x, t1.y ), t1.z );
+    float tF = min( min( t2.x, t2.y ), t2.z );
+
+    if( tN > tF || tF < 0.0) return vec4(-1.0);
+
+    vec3 nor = -sign(rdd)*step(t1.yzx,t1.xyz)*step(t1.zxy,t1.xyz);
+
+    // convert to ray space
+    nor = (inverse(txx) * vec4(nor,0.0)).xyz;
+
+    return vec4( tN, nor );
+}
+`
+
+export const translate = `
+
+mat4 translate(float x, float y, float z) {
+    return mat4( 1.0, 0.0, 0.0, 0.0,
+                 0.0, 1.0, 0.0, 0.0,
+                 0.0, 0.0, 1.0, 0.0,
+                 x,   y,   z,   1.0 );
+}
+
+`;

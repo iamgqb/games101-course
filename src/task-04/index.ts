@@ -187,9 +187,9 @@ async function main(gl: WebGLRenderingContext) {
 
         gl.drawArrays(gl.POINTS, 0, position.length);
 
-        requestAnimationFrame(() => {
-            raf();
-        });
+        // requestAnimationFrame(() => {
+        //     raf();
+        // });
     }
 
     raf();
